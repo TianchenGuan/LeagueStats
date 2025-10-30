@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ChampionWithStats, searchChampions, filterChampionsByRole, sortChampionsByWinRate, sortChampionsByPickRate, sortChampionsByBanRate, sortChampionsByTier } from '@/lib/statistics';
+import { ChampionWithStats, searchChampions, filterChampionsByRole, sortChampionsByWinRate, sortChampionsByPickRate, sortChampionsByBanRate, sortChampionsByTier } from '@/lib/real-statistics';
 import { getChampionIconPath, championNameToSlug } from '@/lib/utils';
 
 interface ChampionsListProps {
@@ -226,18 +226,18 @@ export default function ChampionsList({ champions, allChampions }: ChampionsList
                     champion.stats.winRate >= 50 ? 'text-green-500' : 
                     'text-slate-700 dark:text-slate-300'
                   }`}>
-                    {champion.stats.winRate}%
+                    {Number(champion.stats.winRate).toFixed(2)}%
                   </span>
                 </div>
 
                 {/* Pick Rate */}
                 <div className="flex items-center text-slate-700 dark:text-slate-300">
-                  {champion.stats.pickRate}%
+                  {Number(champion.stats.pickRate).toFixed(2)}%
                 </div>
 
                 {/* Ban Rate */}
                 <div className="flex items-center text-slate-700 dark:text-slate-300">
-                  {champion.stats.banRate}%
+                  {Number(champion.stats.banRate).toFixed(2)}%
                 </div>
 
                 {/* Weak Against */}

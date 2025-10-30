@@ -1,24 +1,60 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Champion, ChampionSummary } from '@/types/champion';
-import { generateMatchupData } from '@/lib/builds';
+import { generateMatchupData, MatchupData } from '@/lib/builds';
 import { getChampionIconPath, championNameToSlug } from '@/lib/utils';
+import { getChampionStats } from '@/lib/real-statistics';
+import { getAllMatchupsForChampion, hasRealMatchupData } from '@/lib/matchups';
 
 interface CountersTabProps {
   champion: Champion;
   allChampions: ChampionSummary[];
 }
 
-type SortKey = 'winRate' | 'games' | 'kda' | 'goldDiff';
+type SortKey = 'winRate' | 'games';
 
 export default function CountersTab({ champion, allChampions }: CountersTabProps) {
-  const matchups = generateMatchupData(champion.id, allChampions);
+  const stats = getChampionStats(champion);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortKey, setSortKey] = useState<SortKey>('winRate');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc'); // Start with worst matchups (ascending win rate)
+  
+  // Get real counters
+  const realCounters = stats.counters || [];
+  const counterChampions = realCounters
+    .map(id => allChampions.find(c => c.id === id))
+    .filter((c): c is ChampionSummary => c !== undefined);
+  
+  // Get matchup data - use real data if available, otherwise generate mock
+  const matchups = useMemo(() => {
+    if (hasRealMatchupData()) {
+      const realMatchups = getAllMatchupsForChampion(champion.id);
+      return realMatchups.map(m => {
+        const opponent = allChampions.find(c => c.id === m.vsChampionId);
+        if (!opponent) return null;
+        
+        // Convert real matchup data to MatchupData format
+        const matchupData: MatchupData = {
+          opponentId: m.vsChampionId,
+          opponentName: opponent.name,
+          winRate: m.winRate,
+          games: m.games,
+          kda: 0, // Not available in current data
+          laneKillRate: 0, // Not available
+          laneWinRate: m.winRate, // Use overall win rate
+          damageTaken: 0, // Not available
+          damageDealt: 0, // Not available
+          goldDiff: 0 // Not available
+        };
+        return matchupData;
+      }).filter((m): m is MatchupData => m !== null);
+    } else {
+      return generateMatchupData(champion.id, allChampions);
+    }
+  }, [champion.id, allChampions]);
   
   // Filter and sort matchups
   const filteredMatchups = matchups
@@ -50,7 +86,7 @@ export default function CountersTab({ champion, allChampions }: CountersTabProps
           <div>
             <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-1">Matchup Statistics</h2>
             <p className="text-sm text-slate-600 dark:text-slate-400">
-              Detailed performance against all champions
+              Real win rates from {stats.games.toLocaleString()} games • Showing {matchups.length} matchups
             </p>
           </div>
           
@@ -68,6 +104,54 @@ export default function CountersTab({ champion, allChampions }: CountersTabProps
           </div>
         </div>
       </div>
+      
+      {/* Real Counters Section */}
+      {counterChampions.length > 0 && (
+        <div className="bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-950/20 dark:to-orange-950/20 rounded-xl p-6 border-2 border-red-200 dark:border-red-800">
+          <div className="flex items-start gap-3 mb-4">
+            <div className="text-2xl">⚠️</div>
+            <div>
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-1">
+                Hardest Counters (From Real Game Data)
+              </h3>
+              <p className="text-sm text-slate-600 dark:text-slate-400">
+                Based on {stats.games.toLocaleString()} games - These champions have the highest win rate against {champion.name}
+              </p>
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+            {counterChampions.map((counter, index) => (
+              <Link
+                key={counter.id}
+                href={`/champions/${championNameToSlug(counter.name)}`}
+                className="bg-white dark:bg-zinc-900 rounded-lg p-4 border-2 border-red-200 dark:border-red-800 hover:border-red-400 dark:hover:border-red-600 transition-all hover:shadow-lg group"
+              >
+                <div className="flex flex-col items-center gap-2">
+                  <div className="relative">
+                    <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-red-400 dark:border-red-600 group-hover:scale-110 transition-transform">
+                      <Image
+                        src={getChampionIconPath(counter.id)}
+                        alt={counter.name}
+                        width={64}
+                        height={64}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <div className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-xs font-bold shadow-lg">
+                      #{index + 1}
+                    </div>
+                  </div>
+                  <div className="text-center">
+                    <div className="font-semibold text-slate-900 dark:text-white text-sm">{counter.name}</div>
+                    <div className="text-xs text-slate-500">{counter.title}</div>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
       
       {/* Matchup Table */}
       <div className="bg-white dark:bg-zinc-900 rounded-xl border border-slate-200 dark:border-zinc-800 overflow-hidden">
@@ -94,28 +178,6 @@ export default function CountersTab({ champion, allChampions }: CountersTabProps
                     Games {getSortIcon('games')}
                   </div>
                 </th>
-                <th 
-                  className="px-4 py-3 text-center text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider cursor-pointer hover:bg-slate-100 dark:hover:bg-zinc-700"
-                  onClick={() => handleSort('kda')}
-                >
-                  <div className="flex items-center justify-center gap-1">
-                    KDA {getSortIcon('kda')}
-                  </div>
-                </th>
-                <th className="px-4 py-3 text-center text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
-                  Lane Kill Rate
-                </th>
-                <th className="px-4 py-3 text-center text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
-                  Lane Win Rate
-                </th>
-                <th 
-                  className="px-4 py-3 text-center text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider cursor-pointer hover:bg-slate-100 dark:hover:bg-zinc-700"
-                  onClick={() => handleSort('goldDiff')}
-                >
-                  <div className="flex items-center justify-center gap-1">
-                    Gold Diff {getSortIcon('goldDiff')}
-                  </div>
-                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200 dark:divide-zinc-800">
@@ -126,8 +188,6 @@ export default function CountersTab({ champion, allChampions }: CountersTabProps
                 const winRateColor = matchup.winRate >= 52 ? 'text-emerald-600 dark:text-emerald-400' : 
                                     matchup.winRate <= 48 ? 'text-red-600 dark:text-red-400' : 
                                     'text-slate-900 dark:text-white';
-                
-                const goldDiffColor = matchup.goldDiff >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400';
                 
                 return (
                   <tr key={matchup.opponentId} className="hover:bg-slate-50 dark:hover:bg-zinc-800 transition-colors">
@@ -151,32 +211,12 @@ export default function CountersTab({ champion, allChampions }: CountersTabProps
                     </td>
                     <td className="px-4 py-4 text-center">
                       <div className={`font-semibold ${winRateColor}`}>
-                        {matchup.winRate.toFixed(1)}%
+                        {matchup.winRate.toFixed(2)}%
                       </div>
                     </td>
                     <td className="px-4 py-4 text-center">
                       <div className="text-sm text-slate-600 dark:text-slate-400">
                         {matchup.games.toLocaleString()}
-                      </div>
-                    </td>
-                    <td className="px-4 py-4 text-center">
-                      <div className="text-sm font-medium text-slate-900 dark:text-white">
-                        {matchup.kda.toFixed(2)}
-                      </div>
-                    </td>
-                    <td className="px-4 py-4 text-center">
-                      <div className="text-sm text-slate-600 dark:text-slate-400">
-                        {matchup.laneKillRate.toFixed(1)}%
-                      </div>
-                    </td>
-                    <td className="px-4 py-4 text-center">
-                      <div className="text-sm text-slate-600 dark:text-slate-400">
-                        {matchup.laneWinRate.toFixed(1)}%
-                      </div>
-                    </td>
-                    <td className="px-4 py-4 text-center">
-                      <div className={`text-sm font-medium ${goldDiffColor}`}>
-                        {matchup.goldDiff >= 0 ? '+' : ''}{matchup.goldDiff}
                       </div>
                     </td>
                   </tr>

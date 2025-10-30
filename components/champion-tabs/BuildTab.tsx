@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { Champion, ChampionSummary } from '@/types/champion';
 import { getMostPopularRunePage, generateItemBuilds, getSynergyChampions } from '@/lib/builds';
 import { getChampionIconPath, championNameToSlug } from '@/lib/utils';
+import { getChampionStats } from '@/lib/real-statistics';
+import { getSummonerSpellName, getSummonerSpellIcon } from '@/lib/summoner-spells';
 import { POPULAR_ITEMS } from '@/types/items';
 import RuneDisplay from '../RuneDisplay';
 
@@ -19,6 +21,7 @@ export default function BuildTab({ champion, allChampions, counters }: BuildTabP
   const builds = generateItemBuilds(champion.id);
   const topBuild = builds[0];
   const synergies = getSynergyChampions(champion.id, allChampions, 5);
+  const stats = getChampionStats(champion);
   
   // Get items for the top build
   const buildItems = topBuild.items.map(id => POPULAR_ITEMS.find(item => item.id === id)).filter(Boolean);
@@ -30,17 +33,50 @@ export default function BuildTab({ champion, allChampions, counters }: BuildTabP
         <h2 className="text-xl font-bold mb-4 text-slate-900 dark:text-white">Core Build</h2>
         
         <div className="grid md:grid-cols-2 gap-6">
-          {/* Runes */}
-          <div>
-            <h3 className="text-sm font-semibold text-slate-600 dark:text-slate-400 mb-3">Recommended Runes</h3>
-            <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-zinc-800 rounded-lg">
-              <RuneDisplay runePage={runePage} size="medium" />
-              <div className="text-right">
-                <div className="text-sm font-semibold text-slate-900 dark:text-white">{runePage.winRate.toFixed(1)}% WR</div>
-                <div className="text-xs text-slate-500">{runePage.pickRate.toFixed(1)}% PR</div>
-                <div className="text-xs text-slate-500">{runePage.games.toLocaleString()} games</div>
+          {/* Runes & Summoner Spells */}
+          <div className="space-y-4">
+            {/* Runes */}
+            <div>
+              <h3 className="text-sm font-semibold text-slate-600 dark:text-slate-400 mb-3">Recommended Runes</h3>
+              <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-zinc-800 rounded-lg">
+                <RuneDisplay runePage={runePage} size="medium" />
+                <div className="text-right">
+                  <div className="text-sm font-semibold text-slate-900 dark:text-white">{runePage.winRate.toFixed(1)}% WR</div>
+                  <div className="text-xs text-slate-500">{runePage.pickRate.toFixed(1)}% PR</div>
+                  <div className="text-xs text-slate-500">{runePage.games.toLocaleString()} games</div>
+                </div>
               </div>
             </div>
+            
+            {/* Summoner Spells */}
+            {stats.topSummonerSpells && stats.topSummonerSpells.length > 0 && (
+              <div>
+                <h3 className="text-sm font-semibold text-slate-600 dark:text-slate-400 mb-3">Summoner Spells</h3>
+                <div className="space-y-2">
+                  {stats.topSummonerSpells.slice(0, 3).map((combo, idx) => (
+                    <div key={idx} className="flex items-center justify-between p-3 bg-slate-50 dark:bg-zinc-800 rounded-lg">
+                      <div className="flex items-center gap-2">
+                        <span className="text-2xl">{getSummonerSpellIcon(combo.ss1)}</span>
+                        <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                          {getSummonerSpellName(combo.ss1)}
+                        </span>
+                        <span className="text-slate-400">+</span>
+                        <span className="text-2xl">{getSummonerSpellIcon(combo.ss2)}</span>
+                        <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                          {getSummonerSpellName(combo.ss2)}
+                        </span>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-xs text-slate-500">{combo.count.toLocaleString()} games</div>
+                        <div className="text-xs text-slate-400">
+                          {((combo.count / stats.games) * 100).toFixed(1)}% pick rate
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
           
           {/* Items */}

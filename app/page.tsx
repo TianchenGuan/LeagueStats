@@ -1,5 +1,5 @@
 import { getAllChampions } from "@/lib/champions";
-import { getChampionsWithStats } from "@/lib/statistics";
+import { getChampionsWithStats } from "@/lib/real-statistics";
 import ChampionsList from "@/components/ChampionsList";
 
 export default function Home() {

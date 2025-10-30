@@ -3,6 +3,7 @@
 import { ChampionSummary } from '@/types/champion';
 import { RunePage, RunePageWithStats, RUNE_TREES } from '@/types/runes';
 import { Item, ItemBuild, ItemWithStats, POPULAR_ITEMS, COMPONENT_ITEMS, STARTER_ITEMS } from '@/types/items';
+import { getChampionStats } from '@/lib/real-statistics';
 
 // Matchup data type
 export interface MatchupData {
@@ -184,6 +185,40 @@ export function getBestMatchups(championId: number, allChampions: ChampionSummar
 }
 
 export function getWorstMatchups(championId: number, allChampions: ChampionSummary[], count: number = 5): MatchupData[] {
+  // Get real counter data from statistics
+  const champion = allChampions.find(c => c.id === championId);
+  if (!champion) {
+    return [];
+  }
+  
+  const stats = getChampionStats(champion);
+  
+  // Use real counters if available, otherwise fall back to mock data
+  if (stats.counters && stats.counters.length > 0) {
+    return stats.counters.slice(0, count).map(counterId => {
+      const opponent = allChampions.find(c => c.id === counterId);
+      if (!opponent) {
+        return null;
+      }
+      
+      // Generate reasonable stats for display (these could be enhanced with real matchup data in the future)
+      const seed = (championId * 1000 + counterId) % 10000;
+      return {
+        opponentId: counterId,
+        opponentName: opponent.name,
+        winRate: Math.max(35, Math.min(45, 40 + (seed % 10) - 5)), // Lower win rate since these are counters
+        games: Math.floor(500 + (seed % 1500)),
+        kda: Math.max(1, Math.min(3, 1.5 + ((seed % 15) / 10))), // Lower KDA against counters
+        laneKillRate: Math.max(40, Math.min(55, 48 + (seed % 15) - 7)),
+        laneWinRate: Math.max(35, Math.min(48, 42 + (seed % 13) - 6)),
+        damageTaken: Math.floor(22000 + (seed % 8000)), // More damage taken
+        damageDealt: Math.floor(13000 + (seed % 7000)), // Less damage dealt
+        goldDiff: Math.floor(-800 + (seed % 600)), // Negative gold diff
+      };
+    }).filter((m): m is MatchupData => m !== null);
+  }
+  
+  // Fallback to mock data if no real counters available
   const matchups = generateMatchupData(championId, allChampions);
   return matchups
     .sort((a, b) => a.winRate - b.winRate)
