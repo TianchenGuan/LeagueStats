@@ -1,3 +1,4 @@
+// Server-only functions that use Node.js APIs (fs, path)
 import fs from 'fs';
 import path from 'path';
 import { Champion, ChampionSummary } from '@/types/champion';
@@ -48,35 +49,29 @@ export function getAllChampions(): ChampionSummary[] {
   return champions.sort((a, b) => a.name.localeCompare(b.name));
 }
 
-// Get champion icon path (local)
-export function getChampionIconPath(championId: number): string {
-  return `/cdragon/icons/${championId}.png`;
+// Get champion by name (URL-safe)
+export function getChampionByName(name: string): Champion | null {
+  const championIds = getAllChampionIds();
+  const normalizedName = name.toLowerCase().replace(/[^a-z0-9]/g, '');
+  
+  for (const id of championIds) {
+    const champion = getChampionById(id);
+    if (champion) {
+      const championNormalizedName = champion.name.toLowerCase().replace(/[^a-z0-9]/g, '');
+      if (championNormalizedName === normalizedName) {
+        return champion;
+      }
+    }
+  }
+  
+  return null;
 }
 
-// Get champion splash art path from Community Dragon CDN
-export function getChampionSplashPath(splashPath: string): string {
-  if (!splashPath) return '';
-  
-  // Remove the leading slash and convert to lowercase
-  const normalizedPath = splashPath.replace(/^\/lol-game-data\/assets\//, '').toLowerCase();
-  
-  return `https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/${normalizedPath}`;
+// Convert champion name to URL-safe slug
+export function championNameToSlug(name: string): string {
+  return name.toLowerCase().replace(/[^a-z0-9]+/g, '');
 }
 
-// Get ability icon path from Community Dragon CDN
-export function getAbilityIconPath(iconPath: string): string {
-  if (!iconPath) return '';
-  
-  // Remove the leading slash and convert to lowercase
-  const normalizedPath = iconPath.replace(/^\/lol-game-data\/assets\//, '').toLowerCase();
-  
-  return `https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/${normalizedPath}`;
-}
-
-// Get ability video path from CloudFront CDN
-export function getAbilityVideoPath(videoPath: string): string {
-  if (!videoPath) return '';
-  
-  return `https://d28xe8vt774jo5.cloudfront.net/${videoPath}`;
-}
+// Re-export client-safe utilities
+export { getChampionIconPath, getChampionSplashPath, getAbilityIconPath, getAbilityVideoPath } from './utils';
 

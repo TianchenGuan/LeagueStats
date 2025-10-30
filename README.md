@@ -9,7 +9,13 @@ A modern, beautiful League of Legends champion statistics website built with Nex
 
 ## Features
 
-- 📊 **Complete Champion Database** - Browse all League of Legends champions
+- 📊 **Complete Champion Database** - Browse all 170+ League of Legends champions
+- 🎮 **op.gg-Style Layout** - Table view with sortable statistics and tier rankings
+- 📈 **Champion Statistics** - Win rate, pick rate, ban rate, and tier rankings
+- 🔍 **Real-time Search** - Instantly search champions by name
+- 🎯 **Role Filtering** - Filter by Top, Jungle, Mid, ADC, Support
+- 📊 **Sortable Columns** - Sort by tier, win rate, pick rate, or ban rate
+- 🆚 **Counter Information** - See which champions counter each other
 - 🎨 **Beautiful UI** - Modern, responsive design inspired by op.gg
 - 🖼️ **Rich Media** - Champion splash arts, icons, and ability images
 - 📱 **Fully Responsive** - Works perfectly on desktop, tablet, and mobile
@@ -84,12 +90,21 @@ league-stats/
 
 ## Key Features Explained
 
-### Champion List Page
-- Grid layout displaying all champions
-- Hover effects and smooth transitions
-- Champion portraits from Community Dragon
-- Role badges for each champion
-- Responsive design (2-6 columns based on screen size)
+### Champion List Page (op.gg Style)
+- **Left Sidebar**: Searchable champion grid with tier badges
+- **Main Table**: Sortable statistics table with:
+  - Rank numbers
+  - Champion names and icons
+  - Tier badges (S, A, B, C, D)
+  - Role icons
+  - Win rate (color-coded)
+  - Pick rate
+  - Ban rate
+  - Counter champions (Weak Against)
+- **Role Filters**: All, Top, Jungle, Middle, Bottom, Support
+- **Real-time Search**: Instant champion filtering
+- **Sortable Columns**: Click headers to sort by different stats
+- **Responsive design** adapting to all screen sizes
 
 ### Champion Detail Pages
 - Hero section with splash art
@@ -99,11 +114,20 @@ league-stats/
 - All champion skins with images
 - Tactical information (difficulty, damage type, etc.)
 
+### Champion Statistics System
+- **Mock Statistics**: Deterministic generation for demo purposes
+- **Tier Calculation**: Based on win rate (S/A/B/C/D)
+- **Realistic Data**: Win rates, pick rates, ban rates
+- **Counter System**: Shows which champions are weak against others
+- **No API Required**: Works without Riot API key
+- See `STATISTICS.md` for detailed information
+
 ### Data Management
 - Static site generation for optimal performance
 - Champion data loaded from local JSON files
 - Images served from Community Dragon CDN
 - Type-safe data handling with TypeScript
+- Statistics cached in memory for fast access
 
 ## Building for Production
 

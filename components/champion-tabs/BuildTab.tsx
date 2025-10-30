@@ -1,0 +1,157 @@
+'use client';
+
+import Image from 'next/image';
+import Link from 'next/link';
+import { Champion, ChampionSummary } from '@/types/champion';
+import { getMostPopularRunePage, generateItemBuilds, getSynergyChampions } from '@/lib/builds';
+import { getChampionIconPath, championNameToSlug } from '@/lib/utils';
+import { POPULAR_ITEMS } from '@/types/items';
+import RuneDisplay from '../RuneDisplay';
+
+interface BuildTabProps {
+  champion: Champion;
+  allChampions: ChampionSummary[];
+  counters: ChampionSummary[];
+}
+
+export default function BuildTab({ champion, allChampions, counters }: BuildTabProps) {
+  const runePage = getMostPopularRunePage(champion.id);
+  const builds = generateItemBuilds(champion.id);
+  const topBuild = builds[0];
+  const synergies = getSynergyChampions(champion.id, allChampions, 5);
+  
+  // Get items for the top build
+  const buildItems = topBuild.items.map(id => POPULAR_ITEMS.find(item => item.id === id)).filter(Boolean);
+  
+  return (
+    <div className="space-y-6">
+      {/* Core Build Section */}
+      <div className="bg-white dark:bg-zinc-900 rounded-xl p-6 border border-slate-200 dark:border-zinc-800">
+        <h2 className="text-xl font-bold mb-4 text-slate-900 dark:text-white">Core Build</h2>
+        
+        <div className="grid md:grid-cols-2 gap-6">
+          {/* Runes */}
+          <div>
+            <h3 className="text-sm font-semibold text-slate-600 dark:text-slate-400 mb-3">Recommended Runes</h3>
+            <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-zinc-800 rounded-lg">
+              <RuneDisplay runePage={runePage} size="medium" />
+              <div className="text-right">
+                <div className="text-sm font-semibold text-slate-900 dark:text-white">{runePage.winRate.toFixed(1)}% WR</div>
+                <div className="text-xs text-slate-500">{runePage.pickRate.toFixed(1)}% PR</div>
+                <div className="text-xs text-slate-500">{runePage.games.toLocaleString()} games</div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Items */}
+          <div>
+            <h3 className="text-sm font-semibold text-slate-600 dark:text-slate-400 mb-3">Core Items</h3>
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 p-3 bg-slate-50 dark:bg-zinc-800 rounded-lg">
+                {buildItems.map((item, idx) => item && (
+                  <div key={idx} className="relative group">
+                    <div className="w-12 h-12 rounded border-2 border-amber-500 overflow-hidden bg-zinc-900">
+                      <Image
+                        src={item.icon}
+                        alt={item.name}
+                        width={48}
+                        height={48}
+                        className="object-cover"
+                      />
+                    </div>
+                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-zinc-900 text-white text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
+                      {item.name}
+                    </div>
+                  </div>
+                ))}
+                <div className="ml-auto text-right">
+                  <div className="text-sm font-semibold text-slate-900 dark:text-white">{topBuild.winRate.toFixed(1)}% WR</div>
+                  <div className="text-xs text-slate-500">{topBuild.pickRate.toFixed(1)}% PR</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      {/* Counters & Synergies */}
+      <div className="grid md:grid-cols-2 gap-6">
+        {/* Strong Against */}
+        <div className="bg-white dark:bg-zinc-900 rounded-xl p-6 border border-slate-200 dark:border-zinc-800">
+          <h2 className="text-lg font-bold mb-4 text-slate-900 dark:text-white">Strong Against</h2>
+          <div className="space-y-2">
+            {counters.slice(0, 5).map((counter) => (
+              <Link
+                key={counter.id}
+                href={`/champions/${championNameToSlug(counter.name)}`}
+                className="flex items-center gap-3 p-2 hover:bg-slate-50 dark:hover:bg-zinc-800 rounded-lg transition-colors group"
+              >
+                <div className="relative w-10 h-10 rounded-full overflow-hidden border-2 border-emerald-500">
+                  <Image
+                    src={getChampionIconPath(counter.id)}
+                    alt={counter.name}
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="font-medium text-sm text-slate-900 dark:text-white truncate">{counter.name}</div>
+                  <div className="text-xs text-slate-500">{counter.title}</div>
+                </div>
+                <div className="flex items-center gap-1 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+                  <span>+</span>
+                  <span>{(55 + (counter.id % 5)).toFixed(1)}%</span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+        
+        {/* Good With */}
+        <div className="bg-white dark:bg-zinc-900 rounded-xl p-6 border border-slate-200 dark:border-zinc-800">
+          <h2 className="text-lg font-bold mb-4 text-slate-900 dark:text-white">Good With</h2>
+          <div className="space-y-2">
+            {synergies.map((synergy) => (
+              <Link
+                key={synergy.id}
+                href={`/champions/${championNameToSlug(synergy.name)}`}
+                className="flex items-center gap-3 p-2 hover:bg-slate-50 dark:hover:bg-zinc-800 rounded-lg transition-colors group"
+              >
+                <div className="relative w-10 h-10 rounded-full overflow-hidden border-2 border-blue-500">
+                  <Image
+                    src={getChampionIconPath(synergy.id)}
+                    alt={synergy.name}
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="font-medium text-sm text-slate-900 dark:text-white truncate">{synergy.name}</div>
+                  <div className="text-xs text-slate-500">{synergy.title}</div>
+                </div>
+                <div className="flex items-center gap-1 text-xs font-semibold text-blue-600 dark:text-blue-400">
+                  <span>{(52 + (synergy.id % 4)).toFixed(1)}%</span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </div>
+      
+      {/* Tips */}
+      <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/20 dark:to-purple-950/20 rounded-xl p-6 border border-blue-200 dark:border-blue-800">
+        <div className="flex items-start gap-3">
+          <div className="text-2xl">💡</div>
+          <div>
+            <h3 className="font-bold text-slate-900 dark:text-white mb-2">Tips</h3>
+            <p className="text-sm text-slate-700 dark:text-slate-300">
+              {champion.name} excels at {champion.roles.join(', ')} playstyle. Focus on utilizing their abilities effectively 
+              and building around their core strengths. The recommended runes and items provide the best balance of damage and utility.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+

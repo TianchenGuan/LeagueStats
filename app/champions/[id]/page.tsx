@@ -1,7 +1,10 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { getChampionById, getChampionIconPath, getChampionSplashPath, getAbilityIconPath, getAllChampionIds } from '@/lib/champions';
+import { getAllChampions, getChampionByName, championNameToSlug } from '@/lib/champions';
+import { getChampionIconPath, getChampionSplashPath, getAbilityIconPath } from '@/lib/utils';
+import { getWorstMatchups } from '@/lib/builds';
+import ChampionTabs from '@/components/ChampionTabs';
 
 interface ChampionPageProps {
   params: Promise<{
@@ -11,25 +14,25 @@ interface ChampionPageProps {
 
 // Generate static params for all champions
 export async function generateStaticParams() {
-  const championIds = getAllChampionIds();
-  return championIds.map((id) => ({
-    id: id.toString(),
+  const champions = getAllChampions();
+  return champions.map((champion) => ({
+    id: championNameToSlug(champion.name),
   }));
 }
 
 export default async function ChampionPage({ params }: ChampionPageProps) {
   const { id } = await params;
-  const championId = parseInt(id);
   
-  if (isNaN(championId)) {
-    notFound();
-  }
-
-  const champion = getChampionById(championId);
+  const champion = getChampionByName(id);
 
   if (!champion) {
     notFound();
   }
+
+  const allChampions = getAllChampions();
+  const counters = getWorstMatchups(champion.id, allChampions, 5).map(m => 
+    allChampions.find(c => c.id === m.opponentId)!
+  );
 
   const baseSkin = champion.skins.find(skin => skin.isBase);
   const splashUrl = baseSkin ? getChampionSplashPath(baseSkin.uncenteredSplashPath) : '';
@@ -157,6 +160,13 @@ export default async function ChampionPage({ params }: ChampionPageProps) {
                 ))}
               </div>
             </div>
+
+            {/* Build Tabs */}
+            <ChampionTabs 
+              champion={champion} 
+              allChampions={allChampions}
+              counters={counters}
+            />
 
             {/* Skins */}
             <div className="bg-white dark:bg-zinc-800 rounded-xl p-6 border border-slate-200 dark:border-zinc-700">
