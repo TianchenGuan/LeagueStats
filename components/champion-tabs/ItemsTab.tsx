@@ -4,6 +4,7 @@ import Image from 'next/image';
 import { Champion } from '@/types/champion';
 import { getRealTopItems, getChampionStats } from '@/lib/real-statistics';
 import { getItemName, getItemIconPath } from '@/lib/item-names';
+import { shouldShowIcons, shouldShowText } from '@/lib/ui-config';
 
 interface ItemsTabProps {
   champion: Champion;
@@ -28,22 +29,31 @@ export default function ItemsTab({ champion }: ItemsTabProps) {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {realItems.map((item, idx) => (
               <div key={idx} className="flex items-center gap-4 p-4 bg-slate-50 dark:bg-zinc-800 rounded-lg border border-slate-200 dark:border-zinc-700">
-                <div className="relative w-16 h-16 rounded border-2 border-amber-500 overflow-hidden bg-zinc-900 flex-shrink-0">
-                  <Image
-                    src={getItemIconPath(item.itemId)}
-                    alt={getItemName(item.itemId)}
-                    width={64}
-                    height={64}
-                    className="object-cover"
-                  />
-                </div>
+                {shouldShowIcons() && (
+                  <div 
+                    className="relative w-16 h-16 rounded border-2 border-amber-500 overflow-hidden bg-zinc-900 flex-shrink-0"
+                    title={getItemName(item.itemId)}
+                  >
+                    <Image
+                      src={getItemIconPath(item.itemId)}
+                      alt={getItemName(item.itemId)}
+                      width={64}
+                      height={64}
+                      className="object-cover"
+                    />
+                  </div>
+                )}
                 <div className="flex-1">
-                  <div className="font-medium text-sm text-slate-900 dark:text-white">
-                    {getItemName(item.itemId)}
-                  </div>
-                  <div className="text-xs text-slate-500 mt-1">
-                    Purchased {item.count.toLocaleString()} times
-                  </div>
+                  {shouldShowText() && (
+                    <>
+                      <div className="font-medium text-sm text-slate-900 dark:text-white">
+                        {getItemName(item.itemId)}
+                      </div>
+                      <div className="text-xs text-slate-500 mt-1">
+                        Purchased {item.count.toLocaleString()} times
+                      </div>
+                    </>
+                  )}
                 </div>
                 <div className="text-right">
                   <div className="text-lg font-bold text-blue-600 dark:text-blue-400">

@@ -8,6 +8,7 @@ import { getChampionIconPath, championNameToSlug } from '@/lib/utils';
 import { getChampionStats, getRealTopItems } from '@/lib/real-statistics';
 import { getSummonerSpellName, getSummonerSpellIconPath } from '@/lib/summoner-spells';
 import { getItemName, getItemIconPath } from '@/lib/item-names';
+import { shouldShowIcons, shouldShowText } from '@/lib/ui-config';
 import RuneDisplay from '../RuneDisplay';
 
 interface BuildTabProps {
@@ -55,34 +56,50 @@ export default function BuildTab({ champion, allChampions, counters }: BuildTabP
                   {stats.topSummonerSpells.slice(0, 3).map((combo, idx) => (
                     <div key={idx} className="flex items-center justify-between p-3 bg-slate-50 dark:bg-zinc-800 rounded-lg">
                       <div className="flex items-center gap-3">
+                        {/* First Spell */}
                         <div className="flex items-center gap-2">
-                          <div className="relative w-8 h-8 rounded overflow-hidden border border-slate-300 dark:border-zinc-700">
-                            <Image
-                              src={getSummonerSpellIconPath(combo.ss1)}
-                              alt={getSummonerSpellName(combo.ss1)}
-                              width={32}
-                              height={32}
-                              className="object-cover"
-                            />
-                          </div>
-                          <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                            {getSummonerSpellName(combo.ss1)}
-                          </span>
+                          {shouldShowIcons() && (
+                            <div 
+                              className="relative w-8 h-8 rounded overflow-hidden border border-slate-300 dark:border-zinc-700"
+                              title={getSummonerSpellName(combo.ss1)}
+                            >
+                              <Image
+                                src={getSummonerSpellIconPath(combo.ss1)}
+                                alt={getSummonerSpellName(combo.ss1)}
+                                width={32}
+                                height={32}
+                                className="object-cover"
+                              />
+                            </div>
+                          )}
+                          {shouldShowText() && (
+                            <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                              {getSummonerSpellName(combo.ss1)}
+                            </span>
+                          )}
                         </div>
                         <span className="text-slate-400">+</span>
+                        {/* Second Spell */}
                         <div className="flex items-center gap-2">
-                          <div className="relative w-8 h-8 rounded overflow-hidden border border-slate-300 dark:border-zinc-700">
-                            <Image
-                              src={getSummonerSpellIconPath(combo.ss2)}
-                              alt={getSummonerSpellName(combo.ss2)}
-                              width={32}
-                              height={32}
-                              className="object-cover"
-                            />
-                          </div>
-                          <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                            {getSummonerSpellName(combo.ss2)}
-                          </span>
+                          {shouldShowIcons() && (
+                            <div 
+                              className="relative w-8 h-8 rounded overflow-hidden border border-slate-300 dark:border-zinc-700"
+                              title={getSummonerSpellName(combo.ss2)}
+                            >
+                              <Image
+                                src={getSummonerSpellIconPath(combo.ss2)}
+                                alt={getSummonerSpellName(combo.ss2)}
+                                width={32}
+                                height={32}
+                                className="object-cover"
+                              />
+                            </div>
+                          )}
+                          {shouldShowText() && (
+                            <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                              {getSummonerSpellName(combo.ss2)}
+                            </span>
+                          )}
                         </div>
                       </div>
                       <div className="text-right">
@@ -105,18 +122,27 @@ export default function BuildTab({ champion, allChampions, counters }: BuildTabP
               <div className="space-y-2">
                 {realItems.slice(0, 4).map((item, idx) => (
                   <div key={idx} className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-zinc-800 rounded-lg">
-                    <div className="relative w-12 h-12 rounded border-2 border-amber-500 overflow-hidden bg-zinc-900 flex-shrink-0">
-                      <Image
-                        src={getItemIconPath(item.itemId)}
-                        alt={getItemName(item.itemId)}
-                        width={48}
-                        height={48}
-                        className="object-cover"
-                      />
-                    </div>
+                    {shouldShowIcons() && (
+                      <div 
+                        className="relative w-12 h-12 rounded border-2 border-amber-500 overflow-hidden bg-zinc-900 flex-shrink-0"
+                        title={getItemName(item.itemId)}
+                      >
+                        <Image
+                          src={getItemIconPath(item.itemId)}
+                          alt={getItemName(item.itemId)}
+                          width={48}
+                          height={48}
+                          className="object-cover"
+                        />
+                      </div>
+                    )}
                     <div className="flex-1">
-                      <div className="text-sm font-medium text-slate-900 dark:text-white">{getItemName(item.itemId)}</div>
-                      <div className="text-xs text-slate-500">Purchased {item.count.toLocaleString()} times</div>
+                      {shouldShowText() && (
+                        <>
+                          <div className="text-sm font-medium text-slate-900 dark:text-white">{getItemName(item.itemId)}</div>
+                          <div className="text-xs text-slate-500">Purchased {item.count.toLocaleString()} times</div>
+                        </>
+                      )}
                     </div>
                     <div className="text-right">
                       <div className="text-sm font-semibold text-blue-600 dark:text-blue-400">{item.pickRate.toFixed(1)}%</div>

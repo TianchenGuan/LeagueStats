@@ -5,6 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { ChampionWithStats, searchChampions, filterChampionsByRole, sortChampionsByWinRate, sortChampionsByPickRate, sortChampionsByBanRate, sortChampionsByTier } from '@/lib/real-statistics';
 import { getChampionIconPath, championNameToSlug } from '@/lib/utils';
+import { shouldShowIcons, shouldShowText, shouldShowIconsOnly, shouldShowTextOnly } from '@/lib/ui-config';
 
 interface ChampionsListProps {
   champions: ChampionWithStats[];
@@ -92,27 +93,51 @@ export default function ChampionsList({ champions, allChampions }: ChampionsList
           </div>
 
           {/* Champion Grid */}
-          <div className="grid grid-cols-5 gap-2 max-h-[calc(100vh-200px)] overflow-y-auto pr-2">
+          <div className={`grid max-h-[calc(100vh-200px)] overflow-y-auto pr-2 ${
+            shouldShowIconsOnly() ? 'grid-cols-5 gap-2' : 
+            shouldShowTextOnly() ? 'grid-cols-1 gap-2' : 
+            'grid-cols-4 gap-3'
+          }`}>
             {allChampions.map((champion) => (
               <Link
                 key={champion.id}
                 href={`/champions/${championNameToSlug(champion.name)}`}
-                className="group relative"
-                title={champion.name}
+                className="group relative flex flex-col items-center"
+                title={shouldShowIconsOnly() ? champion.name : undefined}
               >
-                <div className="aspect-square rounded-lg overflow-hidden border-2 border-transparent hover:border-blue-500 transition-all">
-                  <Image
-                    src={getChampionIconPath(champion.id)}
-                    alt={champion.name}
-                    width={48}
-                    height={48}
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform"
-                  />
-                </div>
-                {/* Tier Badge */}
-                <div className={`absolute -top-1 -right-1 w-5 h-5 rounded-full ${getTierColor(champion.stats.tier)} flex items-center justify-center text-white text-xs font-bold shadow-lg`}>
-                  {champion.stats.tier}
-                </div>
+                {shouldShowIcons() && (
+                  <>
+                    <div className="aspect-square w-full rounded-lg overflow-hidden border-2 border-transparent hover:border-blue-500 transition-all">
+                      <Image
+                        src={getChampionIconPath(champion.id)}
+                        alt={champion.name}
+                        width={48}
+                        height={48}
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform"
+                      />
+                    </div>
+                    {/* Tier Badge */}
+                    <div className={`absolute -top-1 -right-1 w-5 h-5 rounded-full ${getTierColor(champion.stats.tier)} flex items-center justify-center text-white text-xs font-bold shadow-lg`}>
+                      {champion.stats.tier}
+                    </div>
+                  </>
+                )}
+                
+                {shouldShowText() && !shouldShowIconsOnly() && shouldShowIcons() && (
+                  <div className="mt-1 w-full text-center">
+                    <div className="text-xs font-medium text-slate-900 dark:text-white truncate px-1">
+                      {champion.name}
+                    </div>
+                  </div>
+                )}
+                
+                {shouldShowTextOnly() && (
+                  <div className="w-full px-3 py-2 rounded-lg bg-slate-50 dark:bg-zinc-800 hover:bg-blue-50 dark:hover:bg-blue-950/20 border border-slate-200 dark:border-zinc-700 hover:border-blue-500 transition-all">
+                    <div className="text-sm font-medium text-slate-900 dark:text-white truncate">
+                      {champion.name}
+                    </div>
+                  </div>
+                )}
               </Link>
             ))}
           </div>

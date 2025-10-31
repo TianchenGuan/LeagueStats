@@ -1,0 +1,5 @@
+{
+  "displayMode": "icon_text",
+  "description": "UI display configuration for AI agent benchmarking. Options: 'icon_only', 'text_only', 'icon_text' (default)"
+}
+
