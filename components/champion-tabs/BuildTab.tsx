@@ -6,7 +6,7 @@ import { Champion, ChampionSummary } from '@/types/champion';
 import { getMostPopularRunePage, generateItemBuilds, getSynergyChampions } from '@/lib/builds';
 import { getChampionIconPath, championNameToSlug } from '@/lib/utils';
 import { getChampionStats } from '@/lib/real-statistics';
-import { getSummonerSpellName, getSummonerSpellIcon } from '@/lib/summoner-spells';
+import { getSummonerSpellName, getSummonerSpellIconPath } from '@/lib/summoner-spells';
 import { POPULAR_ITEMS } from '@/types/items';
 import RuneDisplay from '../RuneDisplay';
 
@@ -55,16 +55,36 @@ export default function BuildTab({ champion, allChampions, counters }: BuildTabP
                 <div className="space-y-2">
                   {stats.topSummonerSpells.slice(0, 3).map((combo, idx) => (
                     <div key={idx} className="flex items-center justify-between p-3 bg-slate-50 dark:bg-zinc-800 rounded-lg">
-                      <div className="flex items-center gap-2">
-                        <span className="text-2xl">{getSummonerSpellIcon(combo.ss1)}</span>
-                        <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                          {getSummonerSpellName(combo.ss1)}
-                        </span>
+                      <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-2">
+                          <div className="relative w-8 h-8 rounded overflow-hidden border border-slate-300 dark:border-zinc-700">
+                            <Image
+                              src={getSummonerSpellIconPath(combo.ss1)}
+                              alt={getSummonerSpellName(combo.ss1)}
+                              width={32}
+                              height={32}
+                              className="object-cover"
+                            />
+                          </div>
+                          <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                            {getSummonerSpellName(combo.ss1)}
+                          </span>
+                        </div>
                         <span className="text-slate-400">+</span>
-                        <span className="text-2xl">{getSummonerSpellIcon(combo.ss2)}</span>
-                        <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                          {getSummonerSpellName(combo.ss2)}
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <div className="relative w-8 h-8 rounded overflow-hidden border border-slate-300 dark:border-zinc-700">
+                            <Image
+                              src={getSummonerSpellIconPath(combo.ss2)}
+                              alt={getSummonerSpellName(combo.ss2)}
+                              width={32}
+                              height={32}
+                              className="object-cover"
+                            />
+                          </div>
+                          <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                            {getSummonerSpellName(combo.ss2)}
+                          </span>
+                        </div>
                       </div>
                       <div className="text-right">
                         <div className="text-xs text-slate-500">{combo.count.toLocaleString()} games</div>
