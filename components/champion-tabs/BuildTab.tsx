@@ -3,11 +3,11 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { Champion, ChampionSummary } from '@/types/champion';
-import { getMostPopularRunePage, generateItemBuilds, getSynergyChampions } from '@/lib/builds';
+import { getMostPopularRunePage, getSynergyChampions } from '@/lib/builds';
 import { getChampionIconPath, championNameToSlug } from '@/lib/utils';
-import { getChampionStats } from '@/lib/real-statistics';
+import { getChampionStats, getRealTopItems } from '@/lib/real-statistics';
 import { getSummonerSpellName, getSummonerSpellIconPath } from '@/lib/summoner-spells';
-import { POPULAR_ITEMS } from '@/types/items';
+import { getItemName, getItemIconPath } from '@/lib/item-names';
 import RuneDisplay from '../RuneDisplay';
 
 interface BuildTabProps {
@@ -18,13 +18,12 @@ interface BuildTabProps {
 
 export default function BuildTab({ champion, allChampions, counters }: BuildTabProps) {
   const runePage = getMostPopularRunePage(champion.id);
-  const builds = generateItemBuilds(champion.id);
-  const topBuild = builds[0];
   const synergies = getSynergyChampions(champion.id, allChampions, 5);
   const stats = getChampionStats(champion);
   
-  // Get items for the top build
-  const buildItems = topBuild.items.map(id => POPULAR_ITEMS.find(item => item.id === id)).filter(Boolean);
+  // Get real top items for this champion
+  const realItems = getRealTopItems(champion.id);
+  const topItemIds = realItems.slice(0, 4).map(item => item.itemId); // Top 4 core items
   
   return (
     <div className="space-y-6">
@@ -101,31 +100,36 @@ export default function BuildTab({ champion, allChampions, counters }: BuildTabP
           
           {/* Items */}
           <div>
-            <h3 className="text-sm font-semibold text-slate-600 dark:text-slate-400 mb-3">Core Items</h3>
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 p-3 bg-slate-50 dark:bg-zinc-800 rounded-lg">
-                {buildItems.map((item, idx) => item && (
-                  <div key={idx} className="relative group">
-                    <div className="w-12 h-12 rounded border-2 border-amber-500 overflow-hidden bg-zinc-900">
+            <h3 className="text-sm font-semibold text-slate-600 dark:text-slate-400 mb-3">Core Items (From Real Games)</h3>
+            {realItems.length > 0 ? (
+              <div className="space-y-2">
+                {realItems.slice(0, 4).map((item, idx) => (
+                  <div key={idx} className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-zinc-800 rounded-lg">
+                    <div className="relative w-12 h-12 rounded border-2 border-amber-500 overflow-hidden bg-zinc-900 flex-shrink-0">
                       <Image
-                        src={item.icon}
-                        alt={item.name}
+                        src={getItemIconPath(item.itemId)}
+                        alt={getItemName(item.itemId)}
                         width={48}
                         height={48}
                         className="object-cover"
                       />
                     </div>
-                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-zinc-900 text-white text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
-                      {item.name}
+                    <div className="flex-1">
+                      <div className="text-sm font-medium text-slate-900 dark:text-white">{getItemName(item.itemId)}</div>
+                      <div className="text-xs text-slate-500">Purchased {item.count.toLocaleString()} times</div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-sm font-semibold text-blue-600 dark:text-blue-400">{item.pickRate.toFixed(1)}%</div>
+                      <div className="text-xs text-slate-500">pick rate</div>
                     </div>
                   </div>
                 ))}
-                <div className="ml-auto text-right">
-                  <div className="text-sm font-semibold text-slate-900 dark:text-white">{topBuild.winRate.toFixed(1)}% WR</div>
-                  <div className="text-xs text-slate-500">{topBuild.pickRate.toFixed(1)}% PR</div>
-                </div>
               </div>
-            </div>
+            ) : (
+              <div className="p-4 bg-slate-50 dark:bg-zinc-800 rounded-lg text-sm text-slate-500 text-center">
+                No real item data available for this champion
+              </div>
+            )}
           </div>
         </div>
       </div>

@@ -15,11 +15,11 @@ export default function Home() {
             <div>
               <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                 League of Legends Champions
-              </h1>
+          </h1>
               <p className="text-slate-600 dark:text-slate-400">
                 Browse and explore all {champions.length} champions with statistics
-              </p>
-            </div>
+          </p>
+        </div>
             <div className="flex items-center gap-3 px-4 py-2 bg-gradient-to-r from-orange-500 to-red-500 rounded-lg text-white">
               <span className="text-2xl">🔥</span>
               <div className="text-sm">

@@ -211,7 +211,7 @@ export function filterChampionsByRole(champions: ChampionWithStats[], role: stri
   );
 }
 
-// Get real items data for a champion
+// Get real items data for a champion (only items with icons)
 export function getRealTopItems(championId: number): Array<{ itemId: number; count: number; pickRate: number }> {
   const realChampData = realStats.champions[championId.toString()];
   
@@ -219,10 +219,32 @@ export function getRealTopItems(championId: number): Array<{ itemId: number; cou
     return [];
   }
   
+  // Import icon map to check which items have icons
+  const { ITEM_ICON_MAP } = require('./item-icon-map');
+  
   const totalGames = realChampData.games;
-  return realChampData.topItems.map(item => ({
-    ...item,
-    pickRate: (item.count / totalGames) * 100,
+  
+  // Filter to only include items that have icons in Community Dragon
+  return realChampData.topItems
+    .filter(item => ITEM_ICON_MAP[item.itemId.toString()])
+    .map(item => ({
+      ...item,
+      pickRate: Number(((item.count / totalGames) * 100).toFixed(2)),
+    }));
+}
+
+// Get real summoner spell data for a champion
+export function getRealTopSummonerSpells(championId: number): Array<{ ss1: number; ss2: number; count: number; pickRate: number }> {
+  const realChampData = realStats.champions[championId.toString()];
+  
+  if (!realChampData || !realChampData.topSummonerSpells) {
+    return [];
+  }
+  
+  const totalGames = realChampData.games;
+  return realChampData.topSummonerSpells.map(spell => ({
+    ...spell,
+    pickRate: Number(((spell.count / totalGames) * 100).toFixed(2)),
   }));
 }
 
